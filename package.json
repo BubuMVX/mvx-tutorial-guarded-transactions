@@ -1,0 +1,23 @@
+{
+  "name": "mvx-tutorial-guardian",
+  "description": "A simple example on how to sign MultiversX transactions using Guardian",
+  "version": "1.0.0",
+  "author": "Bubu",
+  "dependencies": {
+    "@multiversx/sdk-core": "^13.1.0",
+    "@multiversx/sdk-guardians-provider": "^1.1.0",
+    "@multiversx/sdk-network-providers": "^2.4.3",
+    "@multiversx/sdk-wallet": "^4.4.0",
+    "bignumber.js": "^9.1.2",
+    "otp": "^1.1.2",
+    "ts-dotenv": "^0.9.1"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "build": "tsc -p ."
+  },
+  "devDependencies": {
+    "tsx": "^4.7.3",
+    "typescript": "^5.4.3"
+  }
+}
