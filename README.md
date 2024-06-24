@@ -20,9 +20,9 @@ transaction.
 
 ## Prerequisites
 
-- Node.js installed on your system,
-- A MultiversX wallet,
-- Guardian must be active on this wallet.
+- Node.js installed on your system
+- A MultiversX wallet
+- Guardian must be active on this wallet
 
 ## Code explanations
 
@@ -30,6 +30,7 @@ We start by loading our environment variables:
 
 - `MNEMONIC`: the mnemonic phrase (aka seed phrase) of a wallet.
 - `WALLET_INDEX`: the key index to derive from the mnemonic phrase (by default, `0`).
+- `GUARDIAN_OTP`: the secret seed of your 2FA authenticator used to initialize Guardian.
 - `NETWORK_NAME`: the name of network we're using (`testnet`, `devnet`, `mainnet`).
 - `NETWORK_API`: the base URL of the API we will be using (for example, `https://devnet-api.multiversx.com` for the
   devnet).
@@ -93,7 +94,13 @@ We update the state of the wallet from the network. This will be important to kn
 wallet.update(await provider.getAccount(wallet.address))
 ```
 
-We can now build a new EGLD transfer (EGLD is the native token of MultiversX).
+We can now build a new EGLD transfer.
+
+As EGLD is the native token of MultiversX, we need to call the factory method `createTransactionForNativeTokenTransfer`.
+
+If you wish to transfer another asset or another amount, you can adapt this section.
+For example, for an ESDT transfer you can use `createTransactionForESDTTokenTransfer` and add the related options.
+For more details, you can read the [token transfers chapter on the official documentation](https://docs.multiversx.com/sdk-and-tools/sdk-js/sdk-js-cookbook-v13#token-transfers).
 
 ```ts
 // Load the current status of the wallet from the network (balance, current nonce, etc)
