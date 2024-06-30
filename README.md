@@ -52,7 +52,7 @@ We initialize the objects representing the wallet:
 const mnemonic = Mnemonic.fromString(env.MNEMONIC)
 // Derive the seed as a key for the specified index
 const walletKey = mnemonic.deriveKey(env.WALLET_INDEX)
-// Create a transaction signer
+// Create a transaction signer for this wallet
 const walletSigner = new UserSigner(walletKey)
 // Create an account object representing the state of the wallet
 const wallet = new Account(walletSigner.getAddress())
@@ -100,12 +100,10 @@ As EGLD is the native token of MultiversX, we need to call the factory method `c
 
 If you wish to transfer another asset or another amount, you can adapt this section.
 For example, for an ESDT transfer you can use `createTransactionForESDTTokenTransfer` and add the related options.
-For more details, you can read the [token transfers chapter on the official documentation](https://docs.multiversx.com/sdk-and-tools/sdk-js/sdk-js-cookbook-v13#token-transfers).
+For more details, you can read
+the [token transfers chapter on the official documentation](https://docs.multiversx.com/sdk-and-tools/sdk-js/sdk-js-cookbook-v13#token-transfers).
 
 ```ts
-// Load the current status of the wallet from the network (balance, current nonce, etc)
-wallet.update(await provider.getAccount(wallet.address))
-
 // Create a new transaction: send 1 EGLD to ourself (EGLD has 18 decimals)
 const transaction = factory.createTransactionForNativeTokenTransfer({
     sender: wallet.address,
@@ -113,7 +111,7 @@ const transaction = factory.createTransactionForNativeTokenTransfer({
     nativeAmount: BigInt(new BigNumber(1).shiftedBy(18).toFixed()),
 })
 
-// Add more gas for Guardian
+// Add more gas for the Guardian verification
 transaction.gasLimit += 50000n
 // Set the transaction nonce
 transaction.nonce = BigInt(wallet.getNonceThenIncrement().valueOf())
@@ -126,19 +124,22 @@ transaction.guardian = guardianProvider.guardianAddress
 As Guardian uses a one-time password (OTP) as a two-factor authentication mechanism, we need to generate the current 2FA
 code.
 
+This code is time based and is only valid for a short period of time. If you keep getting errors with the generated
+code, check the current date and time of your machine.
+
 ```ts
 // Create a new One-Time Password object with our secret 2FA seed
 const otp = new OTP({
     secret: env.GUARDIAN_OTP,
 })
-// Get the current OTP code
+// Get the current OTP code valid right now
 const code = otp.totp(Date.now())
 ```
 
-It's time to sign our transaction with Guardian!
+It's time to co-sign our transaction with Guardian!
 
-Note that the Guardian Network Provider expects an array of
-transactions, and will also send back an array of signed transactions.
+Note that the Guardian Network Provider expects an array of transactions, and will also send back an array of signed
+transactions.
 
 ```ts
 // Apply the Guardian signature to the transaction
@@ -161,16 +162,16 @@ Finally, everything is ready to be submitted to the blockchain!
 // Broadcast the fully crafted transaction
 await provider
     .sendTransaction(guardedTransaction)
+    .catch((reason: ErrNetworkProvider) => {
+      console.error(reason.message)
+    })
     .then((txHash) => {
         console.log('Transaction hash', txHash)
     })
-    .catch((reason: ErrNetworkProvider) => {
-        console.error(reason.message)
-    })
 ```
 
-At this point, if all has gone well, you should see the transaction hash, which you can search for in the blockchain
-explorer.
+At this point, if all has gone well, you should see the transaction hash.
+You can search for it in the blockchain explorer.
 
 ## Test the demo code
 

@@ -24,7 +24,7 @@ import BigNumber from "bignumber.js";
     const mnemonic = Mnemonic.fromString(env.MNEMONIC)
     // Derive the seed as a key for the specified index
     const walletKey = mnemonic.deriveKey(env.WALLET_INDEX)
-    // Create a transaction signer
+    // Create a transaction signer for this wallet
     const walletSigner = new UserSigner(walletKey)
     // Create an account object representing the state of the wallet
     const wallet = new Account(walletSigner.getAddress())
@@ -58,7 +58,7 @@ import BigNumber from "bignumber.js";
         nativeAmount: BigInt(new BigNumber(1).shiftedBy(18).toFixed()),
     })
 
-    // Add more gas for Guardian
+    // Add more gas for the Guardian verification
     transaction.gasLimit += 50000n
     // Set the transaction nonce
     transaction.nonce = BigInt(wallet.getNonceThenIncrement().valueOf())
@@ -71,7 +71,7 @@ import BigNumber from "bignumber.js";
     const otp = new OTP({
         secret: env.GUARDIAN_OTP,
     })
-    // Get the current OTP code
+    // Get the current OTP code valid right now
     const code = otp.totp(Date.now())
 
     // Apply the Guardian signature to the transaction
@@ -90,10 +90,10 @@ import BigNumber from "bignumber.js";
     // Broadcast the fully crafted transaction
     await provider
         .sendTransaction(guardedTransaction)
-        .then((txHash) => {
-            console.log('Transaction hash', txHash)
-        })
         .catch((reason: ErrNetworkProvider) => {
             console.error(reason.message)
+        })
+        .then((txHash) => {
+            console.log('Transaction hash', txHash)
         })
 })()
