@@ -90,10 +90,10 @@ import BigNumber from "bignumber.js";
     // Broadcast the fully crafted transaction
     await provider
         .sendTransaction(guardedTransaction)
-        .catch((reason: ErrNetworkProvider) => {
-            console.error(reason.message)
-        })
         .then((txHash) => {
             console.log('Transaction hash', txHash)
+        })
+        .catch((reason: ErrNetworkProvider) => {
+            console.error(reason.message)
         })
 })()

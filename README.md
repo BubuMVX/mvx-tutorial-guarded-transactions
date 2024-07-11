@@ -162,11 +162,11 @@ Finally, everything is ready to be submitted to the blockchain!
 // Broadcast the fully crafted transaction
 await provider
     .sendTransaction(guardedTransaction)
+    .then((txHash) => {
+      console.log('Transaction hash', txHash)
+    })
     .catch((reason: ErrNetworkProvider) => {
       console.error(reason.message)
-    })
-    .then((txHash) => {
-        console.log('Transaction hash', txHash)
     })
 ```
 
