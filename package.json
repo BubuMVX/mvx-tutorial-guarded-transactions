@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "author": "Bubu",
   "dependencies": {
-    "@multiversx/sdk-core": "^13.17.2",
-    "@multiversx/sdk-guardians-provider": "^1.1.0",
+    "@multiversx/sdk-core": "^14.0.2",
+    "@multiversx/sdk-guardians-provider": "^3.0.0",
     "@multiversx/sdk-network-providers": "^2.9.3",
     "@multiversx/sdk-wallet": "^4.6.0",
     "bignumber.js": "^9.3.0",

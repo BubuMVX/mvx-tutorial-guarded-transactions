@@ -1,5 +1,5 @@
-import { Account, TransactionsFactoryConfig, TransferTransactionsFactory } from '@multiversx/sdk-core/out';
-import { TRANSACTION_OPTIONS_TX_GUARDED } from '@multiversx/sdk-core/out/constants';
+import { Address, TransactionsFactoryConfig, TransferTransactionsFactory } from '@multiversx/sdk-core/out';
+import { TRANSACTION_OPTIONS_TX_GUARDED } from '@multiversx/sdk-core/out/core/constants';
 import GenericGuardianProvider from '@multiversx/sdk-guardians-provider/out/genericGuardianProvider';
 import GuardianProviderFactory from '@multiversx/sdk-guardians-provider/out/guardianProviderFactory';
 import TCSGuardianProvider from '@multiversx/sdk-guardians-provider/out/providers/TCSGuardianProvider';
@@ -26,9 +26,8 @@ import { load } from 'ts-dotenv';
     const walletKey = mnemonic.deriveKey(env.WALLET_INDEX);
     // Create a transaction signer for this wallet
     const walletSigner = new UserSigner(walletKey);
-    // Create an account object representing the state of the wallet
-    const wallet = new Account(walletSigner.getAddress());
-
+    // Create an address object
+    const address = new Address(walletSigner.getAddress().bech32());
     // Create a network provider using the MVX API
     const provider = new ApiNetworkProvider(env.NETWORK_API, {
         clientName: 'mvx-tutorial-guardian',
@@ -37,7 +36,7 @@ import { load } from 'ts-dotenv';
     const networkConfig = await provider.getNetworkConfig();
     // Create a network provider using Guardian API for the current wallet
     const guardianProvider: TCSGuardianProvider | GenericGuardianProvider = await GuardianProviderFactory.createProvider({
-        address: wallet.address.bech32(),
+        address: address.toBech32(),
         apiAddress: env.NETWORK_API,
         networkId: env.NETWORK_NAME,
     });
@@ -51,23 +50,25 @@ import { load } from 'ts-dotenv';
     });
 
     // Load the current status of the wallet from the network (balance, current nonce, etc)
-    wallet.update(await provider.getAccount(wallet.address));
+    const account = await provider.getAccount(address);
 
     // Create a new transaction: send 1 EGLD to ourself (EGLD has 18 decimals)
-    const transaction = factory.createTransactionForNativeTokenTransfer({
-        sender: wallet.address,
-        receiver: wallet.address,
-        nativeAmount: BigInt(new BigNumber(1).shiftedBy(18).toFixed()),
-    });
+    const transaction = factory.createTransactionForNativeTokenTransfer(
+        address,
+        {
+            receiver: address,
+            nativeAmount: BigInt(new BigNumber(1).shiftedBy(18).toFixed()),
+        },
+    );
 
     // Add more gas for the Guardian verification
     transaction.gasLimit += 50000n;
     // Set the transaction nonce
-    transaction.nonce = BigInt(wallet.getNonceThenIncrement().valueOf());
+    transaction.nonce = BigInt(account.nonce);
     // Prepare the transaction for Guardian
     transaction.options = TRANSACTION_OPTIONS_TX_GUARDED;
     transaction.version = 2;
-    transaction.guardian = guardianProvider.guardianAddress;
+    transaction.guardian = new Address(guardianProvider.guardianAddress);
 
     // Create a new One-Time Password object with our secret 2FA seed
     const otp = new OTP({
@@ -77,10 +78,10 @@ import { load } from 'ts-dotenv';
     const code = otp.totp(Date.now());
 
     // Apply the Guardian signature to the transaction
-    const guardedTransactions = await guardianProvider.applyGuardianSignature(
-        [transaction],
-        code,
-    );
+    const guardedTransactions = await guardianProvider.applyGuardianSignature({
+        transactions: [transaction],
+        code: code,
+    });
 
     // Get the first transaction sent
     const guardedTransaction = guardedTransactions[0];
